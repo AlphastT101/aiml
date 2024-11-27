@@ -323,7 +323,7 @@ class Kernel:
             else:
                 return False
 
-    def learn(self, filename):
+    def learn(self, filename, log):
         """Load and learn the contents of the specified AIML file.
 
         If filename includes wildcard characters, all matching files
@@ -331,8 +331,9 @@ class Kernel:
 
         """
         for f in glob.glob(filename):
-            if self._verboseMode: print( "Loading %s..." % f, end="")
-            start = time.time()
+            if self._verboseMode and log:
+                print( "Loading %s..." % f, end="")
+                start = time.time()
             # Load and parse the AIML file.
             parser = create_parser()
             handler = parser.getContentHandler()
@@ -352,7 +353,7 @@ class Kernel:
                     new_key=(key[0].upper(), key[1], key[2])
                 self._brain.add(new_key, tem)
             # Parsing was successful.
-            if self._verboseMode:
+            if self._verboseMode and log:
                 print( "done (%.2f seconds)" % (time.time() - start) )
 
     def respond(self, input_, sessionID = _globalSessionID):
