@@ -3,3 +3,5 @@ recursive-include aiml/botdata *.*
 
 include test/*.py
 include test/*.aiml
+include README.md
+include LICENSE
