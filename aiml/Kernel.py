@@ -14,10 +14,8 @@ import time
 import threading
 import xml.sax
 from collections import namedtuple
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
+import requests
 
 from .constants import *
 from . import DefaultSubs
@@ -1013,7 +1011,7 @@ class Kernel:
         # space.  To improve performance, we do this only once for each
         # text element encountered, and save the results for the future.
         if elem[1]["xml:space"] == "default":
-            elem[2] = re.sub("\s+", " ", elem[2])
+            elem[2] = re.sub(r"\s+", " ", elem[2])
             elem[1]["xml:space"] = "preserve"
         return elem[2]
 
@@ -1139,4 +1137,151 @@ class Kernel:
 
         """
         return self.version()
+    
+    def load_preset(self, preset: str) -> None:
+        """Download a preset.
 
+        This function downloads a specified preset.
+
+        Parameters:
+        - preset (str): Name of the preset. Valid options are 'alice' and 'botdata'.
+
+        Raises:
+        - ValueError: If an invalid preset name is provided.
+        """
+        if preset not in ["alice", "standard"]:
+            raise ValueError("Invalid preset name. Available presets are 'alice' and 'standard'.")
+
+
+        presets = {
+            "alice": [
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/ai.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/alice.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/astrology.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/atomic.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/biography.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/bot.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/bot_profile.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/client.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/client_profile.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/computers.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/continuation.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/date.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/default.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/drugs.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/emotion.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/food.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/geography.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/gossip.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/history.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/humor.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/imponderables.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/inquiry.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/interjection.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/iu.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/knowledge.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/literature.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/loebner10.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/money.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/movies.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp0.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp1.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp2.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp3.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp4.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp5.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/mp6.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/music.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/numbers.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/personality.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/phone.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/pickup.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/politics.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/primeminister.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/psychology.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction.names.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction0.safe.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction1.safe.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction2.safe.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction3.safe.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reduction4.safe.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/reductions-update.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/religion.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/salutations.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/science.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/sex.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/sports.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/stack.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/stories.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/that.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/update1.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/update_mccormick.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/wallace.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/alice/xfind.aiml"
+            ],
+
+            "standard" : [
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-calendar.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-examples.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-scripts.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-testcases.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-translation.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/dev-webhelper.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/per-drWallace.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-65percent.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-atomic.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-botmaster.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-brain.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-connect.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-dictionary.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-disconnect.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-dont.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-errors.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-gender.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-geography.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-german.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-gossip.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-hello.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-inactivity.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-inventions.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-knowledge.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-lizards.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-login.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-numbers.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-personality.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-pickup.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-politics.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-profile.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-religion.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-robot.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-sales.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-sextalk.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-sports.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-srai.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-suffixes.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-that.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-turing.aiml",
+                "https://raw.githubusercontent.com/AlphastT101/aiml/refs/heads/master/aiml/botdata/standard/std-yesno.aiml"
+            ]
+        }
+
+        folder = preset
+        file_list = presets[preset]
+        os.makedirs(folder, exist_ok=True)
+
+        # Download and save files
+        for url in file_list:
+            file_name = url.split('/')[-1]
+            print(f"Downloading {file_name}...")
+
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    with open(os.path.join(folder, file_name), "wb") as file:
+                        file.write(response.content)
+                else:
+                    print(f"Failed to download {file_name}: HTTP {response.status_code}")
+            except Exception as e:
+                print(f"Error downloading {file_name}: {e}")
+
+        print(f"Preset {preset} downloaded successfully.")
